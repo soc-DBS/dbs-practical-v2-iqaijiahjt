@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model course {
+  crseCode  String   @id @map("crse_code") @db.VarChar(5)
+  crseName  String   @map("crse_name") @db.VarChar(100)
+  offeredBy String   @map("offered_by") @db.VarChar(5)
+  crseFee   Decimal  @map("crse_fee") @db.Decimal(7, 2)
+  labFee    Decimal? @map("lab_fee") @db.Decimal(7, 2)
+}
+
+model staff {
+  staffNo           String            @id @map("staff_no") @db.Char(4)
+  staffName         String            @map("staff_name") @db.VarChar(100)
+  supervisorStaffNo String?           @map("supervisor_staff_no") @db.Char(4)
+  dob               DateTime          @db.Date
+  grade             String            @db.VarChar(5)
+  maritalStatus     String            @map("marital_status") @db.VarChar(1)
+  pay               Decimal?          @db.Decimal(7, 2)
+  allowance         Decimal?          @db.Decimal(7, 2)
+  hourlyRate        Decimal?          @map("hourly_rate") @db.Decimal(7, 2)
+  gender            String            @db.Char(1)
+  citizenship       String            @db.VarChar(10)
+  joinYr            Int               @map("join_yr")
+  deptCode          String            @map("dept_code") @db.VarChar(5)
+  typeOfEmployment  String            @map("type_of_employment") @db.VarChar(2)
+  highestQln        String            @map("highest_qln") @db.VarChar(10)
+  designation       String            @db.VarChar(20)
+
+  staff_dependent   staff_dependent[]                               // Back-relation to staff_dependent records
+
+  departmentHodToStaff department[] @relation("departmentHodToStaff") 
+  staffDeptCodeToDepartment department @relation("staffDeptCodeToDepartment", fields: [deptCode], references: [deptCode])
+
+  @@map("staff") // Maps the model name to the table name
+}
+
+model staff_dependent {
+  staffNo       String @map("staff_no") @db.Char(4)
+  dependentName String @map("dependent_name") @db.VarChar(30)
+  relationship  String @map("relationship") @db.VarChar(20)
+
+  // Define the relationship to the staff model
+  staff staff @relation(fields: [staffNo], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "staff_dependent_staff_no_fk")
+
+  @@id([staffNo, dependentName])
+  @@map("staff_dependent")    
+}
+
+// Define the department model
+model department {
+  deptCode         String    @id @map("dept_code") @db.VarChar(5)
+  deptName         String    @map("dept_name") @db.VarChar(100)
+  hod              String    @db.Char(4) // Foreign key for HOD
+  noOfStaff        Int?      @map("no_of_staff")
+  maxStaffStrength Int?      @map("max_staff_strength")
+  budget           Decimal?  @db.Decimal(9, 2)
+  expenditure      Decimal?  @db.Decimal(9, 2)
+  hodApptDate      DateTime? @map("hod_appt_date") @db.Date
+
+
+  departmentHodToStaff staff @relation("departmentHodToStaff", fields: [hod], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "dept_hod_fk")
+  staffDeptCodeToDepartment staff[] @relation("staffDeptCodeToDepartment")
+
+  @@map("department") // Maps the model name to the table name
+}
+model staffBackup {
+  staffNo          String   @id @map("staff_no") @db.Char(4)
+  staffName        String   @map("staff_name") @db.VarChar(100)
+  supervisor       String?  @db.Char(4)
+  dob              DateTime @db.Date
+  grade            String   @db.VarChar(5)
+  maritalStatus    String   @map("marital_status") @db.VarChar(1)
+  pay              Decimal? @db.Decimal(7, 2)
+  allowance        Decimal? @db.Decimal(7, 2)
+  hourlyRate       Decimal? @map("hourly_rate") @db.Decimal(7, 2)
+  gender           String   @db.Char(1)
+  citizenship      String   @db.VarChar(10)
+  joinYr           Int      @map("join_yr")
+  deptCode         String   @map("dept_code") @db.VarChar(5)
+  typeOfEmployment String   @map("type_of_employment") @db.VarChar(2)
+  highestQln       String   @map("highest_qln") @db.VarChar(10)
+  designation      String   @db.VarChar(20)
+
+  @@map("staff_backup")
+}
+
+model userAccount {
+  id        Int    @id
+  accountNo String @map("account_no") @db.VarChar(6)
+  role      Int
+  password  String @db.VarChar(255)
+
+  @@map("user_account")
+}
+
+model userRole {
+  id   Int    @id
+  name String @db.VarChar(25)
+
+  @@map("user_role")
+}
+
+model module {
+modCode String @id @map("mod_code") @db.VarChar(10) //Change this field’s type
+modName String @map("mod_name") @db.VarChar(100)
+creditUnit Int @map("credit_unit")
+modCoord String? @map("mod_coord") @db.Char(4) //Add this field
+}
+
+model pre_requisite {
+  modCode   String @map("mod_code") @db.VarChar(10)
+  requisite String @map("requisite") @db.VarChar(10)
+
+  @@id([modCode, requisite]) // Defines the composite primary key
+  @@map("pre_requisite")     // Maps the model name to the table name
+}
+
+
+
+model country {
+  countryName String @id @map("country_name") @db.VarChar(30)
+  language    String @map("language") @db.VarChar(30)
+  region      String @map("region") @db.VarChar(30)
+
+  @@map("country") // Maps the model name to the table name
+}
+
+model student {
+  adminNo     String    @id @map("admin_no") @db.Char(4)
+  studentName String    @map("student_name") @db.VarChar(30)
+  region      String    @map("region") @db.VarChar(30)
+  address     String    @map("address") @db.VarChar(100)
+  mobilePhone String?   @map("mobile_phone") @db.Char(8)
+  homePhone   String?   @map("home_phone") @db.Char(8)
+  dob         DateTime? @map("dob") @db.Date
+  nationality String?   @map("nationality") @db.VarChar(30)
+  caseCode    String?   @map("case_code") @db.VarChar(5)
+
+  @@map("student") // Maps the model name to the table name
+}
+
+model stud_mod_performance {
+  admNoRegistered String @map("adm_no_registered") @db.Char(4)
+  modRegistered   String @map("mod_registered") @db.VarChar(10)
+  mark            Int    @map("mark")
+  grade           String @map("grade") @db.Char(2)
+
+  @@id([admNoRegistered, modRegistered]) // Composite primary key
+  @@map("stud_mod_performance")          // Maps the model name to the table name
+}
